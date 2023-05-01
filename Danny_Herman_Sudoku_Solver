@@ -1,0 +1,170 @@
+from tkinter import*
+root = Tk()
+
+
+
+
+
+
+N = 9
+
+def isSafe(sudoku, row, col, num):
+    for i in range(9):
+        if sudoku[row][i] == num:
+            return False
+
+
+    for i in range(9):
+        if sudoku[i][col] == num:
+            return False
+
+    startRow = row - row %3
+    startCol = col - col %3
+    for i in range(3):
+        for j in range(3):
+            if sudoku[startRow + i][startCol + j] == num:
+                return False
+
+    return True
+
+
+
+def solveSudoku(sudoku, row, col):
+    if row == N - 1 and col == N:
+        return True
+    
+    if col == N:
+        row += 1
+        col = 0
+
+    if sudoku[row][col]>0:
+        return solveSudoku(sudoku, row, col + 1)
+
+    for num in range(1, N+1):
+        if isSafe(sudoku, row, col, num):
+            sudoku[row][col] = num
+
+            if solveSudoku(sudoku, row, col + 1):
+                return True
+
+
+        sudoku[row][col] = 0
+    return False
+
+
+
+def solver(sudoku):
+    if solveSudoku(sudoku, 0, 0):
+        return sudoku
+    else:
+        return 'no'
+
+
+
+
+
+
+###
+
+
+
+
+
+root.title('Sudoku')
+root.geometry('550x550')
+
+label = Label(root, text='Create a puzzle to solve').grid(row=0, column=1, columnspan=10)
+
+errLabel = Label(root, text='')
+errLabel.grid(row=15, column=1, columnspan=10, pady=5)
+
+
+solveLabel = Label(root, text='')
+solveLabel.grid(row=15, column=1, columnspan=10, pady=5)
+
+
+
+
+
+
+cells = {}
+
+def valNum(p):
+    output = (p.isdigit() or p =='') and len(p)<2
+    return output
+
+
+reg = root.register(valNum)
+
+def draw3x3(row, column, bc):
+    for i in range(3):
+        for j in range(3):
+            e = Entry(root, width =5, bg= bc, fg='black', justify='center')
+            e.grid(row=row+i+1, column=column+j+1, sticky='nsew', padx=1, pady=1, ipady=5)
+            cells[(row+i+1, column+j+1)] = e
+
+
+def draw9x9():
+    color = 'cyan'
+    for rowNo in range(1,10,3):
+        for colNo in range(0,9,3):
+            draw3x3(rowNo, colNo, color)
+            if color == 'cyan':
+                color = 'white'
+            else:
+                color = 'cyan'
+            
+
+
+def clearValues():
+    errLabel.configure(text='')
+    solveLabel.configure(text='')
+    for row in range(2,11):
+        for col in range(1,10):
+            cell = cells[(row,col)]
+            cell.delete(0,'end')
+
+
+def getValues():
+    board = []
+    errLabel.configure(text='')
+    solveLabel.configure(text='')
+    for row in range(2,11):
+        rows = []
+        for col in range(1,10):
+            val = cells[(row, col)].get()
+            if val == '':
+                rows.append(0)
+            else:
+                rows.append(int(val))
+
+
+
+        board.append(rows)
+    update(board)
+
+btn = Button(root, command=getValues, text="Solve", width=10)
+btn.grid(row=20, column=1, columnspan=5, pady=20)
+
+
+btn = Button(root, command=clearValues, text="Clear", width=10)
+btn.grid(row=20, column=5, columnspan=5, pady=20)
+
+
+def update(s):
+    sol = solver(s)
+    if sol != 'no':
+        for rows in range(2,11):
+            for col in range(1,10):
+                cells[(rows, col)].delete(0, 'end')
+                cells[(rows, col)].insert(0, sol[rows - 2][col - 1])
+
+        solveLabel.configure(text='Sudoku Solved!')
+    else:
+        errLabel.configure(text='No solution exists')
+        
+
+
+draw9x9()
+root.mainloop
+
